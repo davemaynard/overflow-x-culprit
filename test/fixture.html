@@ -1,0 +1,104 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>overflow-x-culprit fixture</title>
+<style>
+  body { margin: 0; font-family: system-ui, sans-serif; min-height: 180vh; }
+  h1 { font-size: 18px; margin: 12px 16px; }
+  section { margin: 16px; padding: 8px; border: 1px dashed #bbb; }
+  h2 { font-size: 13px; font-weight: normal; color: #555; margin: 0 0 8px; }
+  .bar { height: 32px; }
+</style>
+</head>
+<body>
+<h1>overflow-x-culprit test fixture</h1>
+
+<!-- (a) POSITIVE where scrollbars take layout space: width:100vw on a page
+     with a vertical scrollbar. 100vw includes the scrollbar; clientWidth
+     does not. With overlay scrollbars (macOS) the two are equal and this
+     must NOT be flagged - the harness asserts it conditionally. -->
+<h2 style="margin:0 16px 8px">(a) width: 100vw, full bleed</h2>
+<div class="bar" data-test="vw100" style="width: 100vw; background: #f8b4b4"></div>
+
+<!-- (b) POSITIVE: negative right margin widens the box past the edge -->
+<section>
+  <h2>(b) margin-right: -64px</h2>
+  <div class="bar" data-test="neg-margin" style="margin-right: -64px; background: #ffcc80"></div>
+</section>
+
+<!-- (c) POSITIVE: nowrap text overflows its normal-width block; there is no
+     child element to blame, only the raw text -->
+<section>
+  <h2>(c) white-space: nowrap text</h2>
+  <div data-test="nowrap" style="white-space: nowrap; background: #fff59d">
+    this-line-refuses-to-wrap this-line-refuses-to-wrap this-line-refuses-to-wrap
+    this-line-refuses-to-wrap this-line-refuses-to-wrap this-line-refuses-to-wrap
+    this-line-refuses-to-wrap this-line-refuses-to-wrap this-line-refuses-to-wrap
+    this-line-refuses-to-wrap this-line-refuses-to-wrap this-line-refuses-to-wrap
+    this-line-refuses-to-wrap this-line-refuses-to-wrap this-line-refuses-to-wrap
+    this-line-refuses-to-wrap this-line-refuses-to-wrap this-line-refuses-to-wrap
+    this-line-refuses-to-wrap this-line-refuses-to-wrap this-line-refuses-to-wrap
+    this-line-refuses-to-wrap this-line-refuses-to-wrap this-line-refuses-to-wrap
+    this-line-refuses-to-wrap this-line-refuses-to-wrap this-line-refuses-to-wrap
+    this-line-refuses-to-wrap this-line-refuses-to-wrap this-line-refuses-to-wrap
+  </div>
+</section>
+
+<!-- (d) POSITIVE: oversized image with intrinsic layout width -->
+<section>
+  <h2>(d) 1600px image, no max-width</h2>
+  <img data-test="big-image" width="1600" height="32" alt="wide"
+       src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='1600' height='32'><rect width='1600' height='32' fill='%2390caf9'/></svg>">
+</section>
+
+<!-- (e) POSITIVE: absolutely-positioned element hanging off the right edge -->
+<section style="position: relative">
+  <h2>(e) position: absolute; left: 100%</h2>
+  <div class="bar" data-test="abs-right"
+       style="position: absolute; left: 100%; top: 24px; width: 120px; background: #a5d6a7"></div>
+  <div class="bar"></div>
+</section>
+
+<!-- (i) POSITIVE: transform pushes an innocent box past the right edge.
+     Verified empirically: transformed bounds DO extend Chrome's scrollable
+     overflow area to the right. -->
+<h2 style="margin:0 16px 8px">(i) transform: translateX() past the edge</h2>
+<div class="bar" data-test="transform-out"
+     style="width: 120px; transform: translateX(calc(100vw - 20px)); background: #ef9a9a"></div>
+
+<!-- (j) POSITIVE: wide element inside an open shadow root -->
+<section>
+  <h2>(j) 2400px div inside an open shadow root</h2>
+  <div id="shadow-host"></div>
+</section>
+
+<!-- (f) NEGATIVE: wide child clipped by an overflow-x:hidden container
+     causes container clipping, not page scroll -->
+<section>
+  <h2>(f) 3000px child inside overflow-x: hidden (must NOT flag)</h2>
+  <div style="overflow-x: hidden">
+    <div class="bar" data-test="clipped-child" style="width: 3000px; background: #b0bec5"></div>
+  </div>
+</section>
+
+<!-- (g) NEGATIVE: fixed elements ride the viewport and never create page
+     scroll, however wide -->
+<div data-test="fixed-wide"
+     style="position: fixed; top: 0; left: 0; width: 120vw; height: 6px; background: rgba(126, 87, 194, 0.5)"></div>
+
+<!-- (h) NEGATIVE: the layout box overflows, but a transform pulls it back
+     inside. Verified empirically: no scrollable overflow results, so it must
+     NOT be flagged (a layout-position-based script would false-positive). -->
+<h2 style="margin:0 16px 8px">(h) overflowing box pulled back by transform (must NOT flag)</h2>
+<div class="bar" data-test="transform-back"
+     style="width: 200px; margin-left: calc(100% - 40px); transform: translateX(-400px); background: #c5e1a5"></div>
+
+<script>
+  const host = document.getElementById('shadow-host');
+  const root = host.attachShadow({ mode: 'open' });
+  root.innerHTML =
+    '<div data-test="shadow-wide" style="width: 2400px; height: 32px; background: #ce93d8"></div>';
+</script>
+</body>
+</html>
