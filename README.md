@@ -7,7 +7,11 @@ right edge gets a red outline, a fixed overlay lists them with their overflow in
 and a `console.table` gives you clickable handles to jump to each one in DevTools. The
 badge shows the culprit count. Click again to clear everything.
 
-![The test fixture with culprits outlined](docs/screenshot.png)
+[![The demo page with five culprits outlined in red and the panel listing each one with its overflow in pixels](docs/screenshot.png)](https://davemaynard.github.io/overflow-x-culprit)
+
+**[Try it without installing anything →](https://davemaynard.github.io/overflow-x-culprit)** — a page with
+five deliberate overflow bugs and one decoy, running this extension's content script directly, so the
+button on it does what the toolbar button does.
 
 ## The gotchas it catches
 
@@ -47,7 +51,7 @@ change the very overflow being measured.
 
 ## Install
 
-Chrome Web Store listing coming. Until then, load it unpacked:
+Load it unpacked — it is not on the Chrome Web Store:
 
 1. Clone this repo.
 2. Open `chrome://extensions`, enable **Developer mode**.
@@ -66,8 +70,13 @@ no runtime dependencies.
 npm install        # playwright is the only devDependency
 npm test           # runs test/run.mjs against real Chrome, headless
 npm run icons      # regenerate icons/ from the inline SVG
-npm run screenshot # regenerate docs/screenshot.png
+npm run build:docs # copy content.js into docs/ for the published demo
+npm run screenshot # regenerate docs/screenshot.png from the demo page
 ```
+
+`docs/` is the demo GitHub Pages serves. `docs/index.html` is written by hand;
+`docs/overflow-x-culprit.js` is a copy of `content.js` that `npm run build:docs` refreshes
+and CI checks for drift.
 
 `test/fixture.html` contains labeled positive scenarios (100vw, negative margin, nowrap
 text, oversized image, absolute positioning, transform-out, shadow DOM) and negative ones

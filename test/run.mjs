@@ -91,6 +91,24 @@ assert('every culprit overflows by a positive amount',
 assert('overlay lists every culprit',
   snap.culprits.every((c) => snap.overlayText.includes(`+${c.overflowPx}px`)));
 
+// A label like "div" identifies nothing on a page full of divs, and most
+// elements carry neither id nor class. Every line must name something findable:
+// an id, classes, a position among siblings, or an ancestor path.
+const labels = await page.evaluate(() =>
+  [...document.getElementById('overflow-x-culprit-overlay').children]
+    .map((line) => line.textContent)
+    .filter((text) => /\+\d+px$/.test(text))
+    .map((text) => text.replace(/\s+\+\d+px$/, '')));
+assert('overlay labels one line per culprit', labels.length === snap.culprits.length,
+  `${labels.length} labels for ${snap.culprits.length} culprits`);
+for (const label of labels) {
+  assert(`"${label}" is findable, not a bare tag`,
+    /[#.:>]/.test(label), 'no id, class, position or ancestor to go on');
+}
+// Two culprits sharing a label send you to the wrong element half the time.
+assert('every label is distinct', new Set(labels).size === labels.length,
+  labels.join(' | '));
+
 // ----------------------------------------------------------------- resize
 // Widen the viewport: fixed-width culprits (1600px image, 2400px shadow div)
 // stop overflowing; the debounced rescan must clear their stale outlines.

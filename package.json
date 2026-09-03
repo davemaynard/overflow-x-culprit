@@ -7,7 +7,8 @@
   "scripts": {
     "test": "node test/run.mjs",
     "icons": "node scripts/make-icons.mjs",
-    "screenshot": "node scripts/make-screenshot.mjs"
+    "screenshot": "node scripts/make-screenshot.mjs",
+    "build:docs": "node scripts/build-docs.mjs"
   },
   "devDependencies": {
     "playwright": "^1.49.0"
