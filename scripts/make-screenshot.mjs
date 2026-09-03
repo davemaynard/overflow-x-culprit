@@ -31,11 +31,16 @@ const browser = await chromium.launch({channel: 'chrome'}).catch(() => chromium.
 try {
   const page = await browser.newPage({viewport: {width: 1200, height: 820}, deviceScaleFactor: 2});
   await page.goto(`http://localhost:${server.address().port}/index.html`);
-  await page.waitForTimeout(300);
+  await page.evaluate(() => document.fonts.ready);
   // Drive the page's own button, so the control's label and hint match the result shown.
   await page.click('#run');
-  // Far enough down that the panel and three outlined culprits are in frame together.
-  await page.evaluate(() => window.scrollTo(0, 260));
+  // Start at the first culprit, just under the sticky bar, so the panel and three
+  // outlined culprits are in frame together without a stray line of the intro.
+  await page.evaluate(() => {
+    const bar = document.querySelector('.controls').getBoundingClientRect().height;
+    const first = document.querySelector('section').getBoundingClientRect().top + window.scrollY;
+    window.scrollTo(0, first - bar - 24);
+  });
   await page.waitForTimeout(300);
 
   const file = path.join(root, 'docs/screenshot.png');

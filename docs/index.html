@@ -4,176 +4,362 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>overflow-x-culprit</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,500&display=swap"
+      rel="stylesheet"
+    />
     <style>
       :root {
         --ink: #12151a;
-        --muted: #5d6673;
-        --line: #e2e6ec;
-        --page: #fbfcfd;
+        --muted: #5b6470;
+        --line: #e1e5ea;
+        --page: #fafbfc;
         --card: #ffffff;
-        --accent: #c62828;
+        /* The planted elements share one neutral fill, so the only colour on the
+           page is the outline the extension draws when it finds them. */
+        --block: #e4e8ed;
+        --block-stripe: #d5dae1;
+        /* The extension's own outline red, so the page and the result agree. */
+        --accent: #e53935;
+        /* Two radii: controls and containers share one, code gets the hairline. */
+        --r-sm: 4px;
+        --r: 8px;
+        --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
       }
-      * { box-sizing: border-box; }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        color-scheme: light;
+        background: var(--page);
+      }
+
       body {
         margin: 0;
         background: var(--page);
         color: var(--ink);
-        font: 16px/1.65 ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+        font-family:
+          'IBM Plex Sans',
+          ui-sans-serif,
+          system-ui,
+          -apple-system,
+          sans-serif;
+        font-size: 16px;
+        line-height: 1.6;
+        -webkit-font-smoothing: antialiased;
       }
-      .wrap { max-width: 900px; margin: 0 auto; padding: 0 24px; }
-      header { padding: 56px 0 28px; }
-      h1 { font-size: 2rem; margin: 0 0 10px; letter-spacing: -0.02em; }
-      h2 { font-size: 1.05rem; margin: 0 0 6px; }
-      p { margin: 0 0 14px; }
-      .lede { font-size: 1.1rem; color: var(--muted); margin-bottom: 22px; }
-      code {
-        font-family: ui-monospace, 'SF Mono', Menlo, monospace;
-        font-size: 0.87em;
-        background: #eef1f5;
-        padding: 0.15em 0.4em;
-        border-radius: 4px;
+
+      ::selection {
+        background: rgb(229 57 53 / 0.18);
       }
+
+      a {
+        color: var(--ink);
+        text-decoration-thickness: 1px;
+        text-underline-offset: 0.18em;
+        text-decoration-color: var(--muted);
+      }
+
+      a:hover {
+        text-decoration-color: var(--accent);
+      }
+
+      :focus-visible {
+        outline: 2px solid var(--ink);
+        outline-offset: 3px;
+        border-radius: var(--r-sm);
+      }
+
+      h1,
+      h2 {
+        text-wrap: balance;
+      }
+
+      p {
+        text-wrap: pretty;
+        max-width: 68ch;
+        margin: 0 0 14px;
+      }
+
+      .wrap {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 0 24px;
+      }
+
+      /* The bar stays put while the page scrolls under it, so the button is
+         always to hand once the outlines are on. */
       .controls {
         position: sticky;
         top: 0;
         z-index: 10;
-        background: rgba(251, 252, 253, 0.94);
-        backdrop-filter: blur(6px);
+        background: rgb(250 251 252 / 0.92);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
         border-bottom: 1px solid var(--line);
-        padding: 12px 0;
       }
-      .controls .wrap { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+
+      .controls .wrap {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        height: 60px;
+      }
+
+      .name {
+        font-weight: 500;
+        text-decoration: none;
+        margin-right: auto;
+      }
+
+      .hint {
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+
       button {
         font: inherit;
-        font-weight: 600;
+        font-weight: 500;
         color: #fff;
         background: var(--ink);
         border: 0;
-        border-radius: 8px;
+        border-radius: var(--r);
         padding: 9px 16px;
         cursor: pointer;
+        white-space: nowrap;
+        transition:
+          background-color 150ms ease,
+          transform 160ms var(--ease-out);
       }
-      button:hover { background: #2a303a; }
-      .hint { color: var(--muted); font-size: 0.9rem; }
+
+      button:hover {
+        background: #2a303a;
+      }
+
+      button:active {
+        transform: scale(0.97);
+      }
+
+      header {
+        padding: 56px 0 32px;
+      }
+
+      h1 {
+        font-size: clamp(1.7rem, 4.2vw, 2.4rem);
+        font-weight: 600;
+        line-height: 1.15;
+        letter-spacing: -0.025em;
+        margin: 0 0 14px;
+        max-width: 22ch;
+      }
+
+      .lede {
+        font-size: 1.1rem;
+        color: var(--muted);
+        margin-bottom: 18px;
+      }
+
+      h2 {
+        font-size: 1.1rem;
+        font-weight: 600;
+        line-height: 1.3;
+        margin: 0 0 6px;
+      }
+
+      code {
+        font-family: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+        font-size: 0.87em;
+        background: var(--block);
+        padding: 0.12em 0.4em;
+        border-radius: var(--r-sm);
+      }
+
+      /* Each bug lives in its own container, so the reader can see the element
+         reach past the box it belongs to. */
       section {
         background: var(--card);
         border: 1px solid var(--line);
-        border-radius: 12px;
-        padding: 20px 22px;
-        margin: 0 0 18px;
+        border-radius: var(--r);
+        padding: 24px;
+        margin: 0 0 16px;
       }
-      section p:last-child { margin-bottom: 0; }
-      .tag {
-        display: inline-block;
-        font-size: 0.72rem;
-        font-weight: 700;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-        color: var(--accent);
-        margin-bottom: 8px;
+
+      section p:last-of-type {
+        margin-bottom: 18px;
       }
-      .tag.clean { color: #2e7d32; }
-      footer { padding: 30px 0 70px; color: var(--muted); font-size: 0.9rem; }
-      a { color: #1558c0; }
+
+      section > :last-child {
+        margin-bottom: 0;
+      }
+
+      footer {
+        padding: 32px 0 72px;
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
 
       /* ---- The planted bugs. Each one is a real cause of the mystery scrollbar. ---- */
 
+      .block {
+        height: 56px;
+        border-radius: var(--r);
+        background: repeating-linear-gradient(
+          -45deg,
+          var(--block) 0 10px,
+          var(--block-stripe) 10px 12px
+        );
+      }
+
       /* 100vw includes the scrollbar gutter; the page's usable width does not. */
-      .full-bleed { width: 100vw; height: 56px; border-radius: 8px; background: linear-gradient(90deg, #ffcdd2, #ef9a9a); }
+      .full-bleed {
+        width: 100vw;
+      }
 
       /* A negative right margin pushes the box past the edge. */
-      .pulled { height: 56px; margin-right: -620px; border-radius: 8px; background: linear-gradient(90deg, #ffe0b2, #ffb74d); }
+      .pulled {
+        margin-right: -620px;
+      }
 
-      /* Text that refuses to wrap has no child element to blame — only the raw line. */
-      .nowrap { white-space: nowrap; background: #fff8e1; padding: 10px 12px; border-radius: 8px; font-family: ui-monospace, Menlo, monospace; font-size: 0.85rem; }
+      /* Text that refuses to wrap has no child element to blame, only the raw line. */
+      .nowrap {
+        white-space: nowrap;
+        background: var(--block);
+        padding: 10px 14px;
+        border-radius: var(--r);
+        font-family: 'IBM Plex Mono', ui-monospace, Menlo, monospace;
+        font-size: 0.85rem;
+      }
 
       /* A grid child with a fixed width wider than its column. */
-      .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-      .cols .wide { width: 1800px; height: 56px; border-radius: 8px; background: linear-gradient(90deg, #c5cae9, #7986cb); }
+      .cols {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+      }
+
+      .cols .wide {
+        width: 1800px;
+      }
+
+      /* The image has no max-width, so its intrinsic 1700px wins. */
+      #wide-image {
+        display: block;
+        border-radius: var(--r);
+      }
 
       /* The decoy: just as wide, but clipped, so it creates no page scrollbar. */
-      .clipped { overflow-x: hidden; border-radius: 8px; }
-      .clipped > div { width: 1400px; height: 56px; border-radius: 8px; background: linear-gradient(90deg, #c8e6c9, #81c784); }
+      .clipped {
+        overflow-x: hidden;
+        border-radius: var(--r);
+      }
+
+      .clipped > div {
+        width: 1400px;
+      }
+
+      @media (max-width: 640px) {
+        .controls .wrap {
+          gap: 12px;
+        }
+
+        .hint {
+          display: none;
+        }
+
+        header {
+          padding: 40px 0 24px;
+        }
+
+        section {
+          padding: 20px;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        button {
+          transition: none;
+        }
+      }
     </style>
   </head>
   <body>
     <div class="controls">
       <div class="wrap">
+        <a class="name" href="./">overflow-x-culprit</a>
+        <span class="hint" id="hint" aria-live="polite"></span>
         <button id="run" type="button">Find the culprit</button>
-        <span class="hint" id="hint">This page has five deliberate overflow bugs, and one decoy.</span>
+        <a href="https://github.com/davemaynard/overflow-x-culprit">GitHub</a>
       </div>
     </div>
 
     <div class="wrap">
       <header>
-        <h1>overflow-x-culprit</h1>
+        <h1>Something on this page is causing a horizontal scrollbar.</h1>
         <p class="lede">
-          Something on the page is causing a horizontal scrollbar. This finds out what, and outlines it.
+          Five things, in fact, plus one decoy. Press the button and each culprit gets a red outline and a line in
+          the panel saying how far past the edge it reaches.
         </p>
         <p>
-          This page is running the extension's content script directly, so the button above does exactly what the
-          toolbar button does in Chrome. Press it, and every element that widens the page gets a red outline and a
-          line in the panel telling you how far past the edge it reaches.
+          This page runs the extension's content script directly, so the button does exactly what the toolbar button
+          does in Chrome.
         </p>
       </header>
 
       <section>
-        <span class="tag">Culprit</span>
-        <h2>Full-bleed banner at <code>width: 100vw</code></h2>
+        <h2>A full-bleed banner at <code>width: 100vw</code></h2>
         <p>
           The classic. <code>100vw</code> counts the vertical scrollbar's gutter, but the space the page actually has
           does not, so a full-bleed element overhangs by exactly the scrollbar's width.
         </p>
-        <div class="full-bleed"></div>
+        <div class="block full-bleed"></div>
       </section>
 
       <section>
-        <span class="tag">Culprit</span>
-        <h2>Negative right margin</h2>
+        <h2>A negative right margin</h2>
         <p>A pulled-out box reaches past its container, and nothing clips it.</p>
-        <div class="pulled"></div>
+        <div class="block pulled"></div>
       </section>
 
       <section>
-        <span class="tag">Culprit</span>
         <h2>Text that will not wrap</h2>
-        <p>There is no child element to blame here — the raw line is what is too wide.</p>
+        <p>There is no child element to blame here. The raw line is what is too wide.</p>
         <div class="nowrap">
           npm&nbsp;run&nbsp;build&nbsp;--&nbsp;this-single-token-refuses-to-break-anywhere-at-all-and-so-it-just-keeps-going-and-going-and-going-well-past-the-right-hand-edge-of-the-page-and-clean-out-of-sight
         </div>
       </section>
 
       <section>
-        <span class="tag">Culprit</span>
         <h2>A fixed-width child in a fluid grid</h2>
         <p>The column is half the container. The child is not, and a grid item will not shrink below its set width.</p>
         <div class="cols">
-          <div class="wide"></div>
+          <div class="block wide"></div>
         </div>
       </section>
 
       <section>
-        <span class="tag">Culprit</span>
         <h2>An image wider than its column</h2>
         <p>No <code>max-width: 100%</code>, so the intrinsic width wins.</p>
         <img id="wide-image" alt="" width="1700" height="56" />
       </section>
 
       <section>
-        <span class="tag clean">Decoy</span>
-        <h2>Just as wide, but clipped</h2>
+        <h2>The decoy: just as wide, but clipped</h2>
         <p>
           This box is 1400px inside a container with <code>overflow-x: hidden</code>. It never reaches the page edge,
           so it is not a culprit and is not outlined. Not crying wolf is half the job.
         </p>
-        <div class="clipped"><div></div></div>
+        <div class="clipped"><div class="block"></div></div>
       </section>
 
       <footer>
         <p>
-          Install it as a Chrome extension from
-          <a href="https://github.com/davemaynard/overflow-x-culprit">the repository</a> — load unpacked, then click
-          the toolbar button on any page.
+          To use it on your own pages, install it as a Chrome extension from
+          <a href="https://github.com/davemaynard/overflow-x-culprit">the repository</a>: load it unpacked, then click
+          the toolbar button.
         </p>
       </footer>
     </div>
@@ -181,13 +367,14 @@
     <script src="./overflow-x-culprit.js"></script>
     <script>
       // A data URI keeps the page to two files; the point is the intrinsic width.
+      // encodeURIComponent turns the '#' into '%23' itself, so the markup uses a
+      // plain '#'. Pre-encoding it would double-encode and leave the fill invalid.
       document.getElementById('wide-image').src =
         'data:image/svg+xml;utf8,' +
         encodeURIComponent(
           '<svg xmlns="http://www.w3.org/2000/svg" width="1700" height="56">' +
-            '<defs><linearGradient id="g"><stop offset="0" stop-color="%23b3e5fc"/>' +
-            '<stop offset="1" stop-color="%234fc3f7"/></linearGradient></defs>' +
-            '<rect width="1700" height="56" rx="8" fill="url(%23g)"/></svg>',
+            '<rect width="1700" height="56" rx="8" fill="#e4e8ed"/>' +
+            '</svg>',
         );
 
       const button = document.getElementById('run');
@@ -196,9 +383,7 @@
         window.__overflowXCulprit.toggle();
         const on = window.__overflowXCulprit.active;
         button.textContent = on ? 'Clear' : 'Find the culprit';
-        hint.textContent = on
-          ? 'Outlined in red. The panel lists each one and how far past the edge it reaches.'
-          : 'This page has five deliberate overflow bugs, and one decoy.';
+        hint.textContent = on ? 'Outlined in red. The panel lists each one.' : '';
       });
     </script>
   </body>
