@@ -2,6 +2,7 @@
   "name": "overflow-x-culprit",
   "version": "1.0.0",
   "description": "Chrome extension that finds the element causing a horizontal scrollbar",
+  "license": "MIT",
   "private": true,
   "type": "module",
   "scripts": {

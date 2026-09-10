@@ -88,3 +88,7 @@ One platform note: headless Chrome on macOS uses overlay scrollbars (0px wide), 
 `100vw` scenario genuinely does not overflow there; the harness measures the scrollbar
 and asserts that case conditionally. On Windows and Linux, where scrollbars take layout
 space, it is a true positive.
+
+## License
+
+MIT
